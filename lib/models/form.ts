@@ -1,7 +1,21 @@
-import Square from './square.js';
+import GameObject from '../interfaces/game-object';
+import Square from './square';
 
-export default class Form{
-    constructor (id, x, y, formCode, color){
+export default class Form implements GameObject{
+    
+    id: number;
+    initialX: number;
+    initialY: number;
+    formCode: number;
+    color: string;
+    squares: Array<Square>;
+    isMoving: boolean;
+    cicles: {
+        connected: object,
+        disconnected: object,
+    };
+
+    constructor (id: number, x: number, y: number, formCode: number, color: string){
         this.id = id;
         this.initialX = x;
         this.initialY = y;
@@ -25,7 +39,7 @@ export default class Form{
         };
     }
 
-    move(command,collision){
+    move(command: string, collision: Array<Form>){
         let max = 200;
 
         this.isMoving = true;
@@ -97,7 +111,7 @@ export default class Form{
         this.isMoving = false;
     }
 
-    draw(drawer){
+    draw(drawer: CanvasRenderingContext2D){
         this.squares.forEach(element => {
             element.draw(drawer);
         });
@@ -111,7 +125,7 @@ export default class Form{
         }
     }
 
-    downSquares(y){
+    downSquares(y: number){
         this.squares.forEach(square => {
             if(square.y < y){
                 square.y = square.y + square.size;
@@ -119,7 +133,7 @@ export default class Form{
         })
     }
 
-    deleteSquare(y){
+    deleteSquare(y: number){
         let newSquares = [];
 
         this.squares.forEach(square => {
@@ -133,7 +147,7 @@ export default class Form{
         this.downSquares(y);
     }
 
-    isColliding(collision){
+    isColliding(collision: Array<Form>){
         let generate = false;
 
         this.squares.forEach(square => {
@@ -191,10 +205,10 @@ export default class Form{
                 break;
             case 2:
                 this.squares.push(
-                    new Square(this.id,this.initialX,this.initialY,20,this.color),
-                    new Square(this.id,this.initialX,this.initialY - 20,20,this.color),
-                    new Square(this.id,this.initialX,this.initialY - 40,20,this.color),
-                    new Square(this.id,this.initialX,this.initialY - 60,20,this.color),
+                    new Square(this.id,this.initialX,this.initialY,20,this.color, 0, false, false),
+                    new Square(this.id,this.initialX,this.initialY - 20,20,this.color, 0, false, false),
+                    new Square(this.id,this.initialX,this.initialY - 40,20,this.color, 0, false, false),
+                    new Square(this.id,this.initialX,this.initialY - 60,20,this.color, 0, false, false),
                 );
                 break;
             case 3:
@@ -223,10 +237,10 @@ export default class Form{
                 break;
             case 6:
                 this.squares.push(
-                    new Square(this.id,this.initialX,this.initialY,20,this.color,),
-                    new Square(this.id,this.initialX,this.initialY - 20,20,this.color),
-                    new Square(this.id,this.initialX + 20,this.initialY,20,this.color),
-                    new Square(this.id,this.initialX + 20,this.initialY - 20,20,this.color),
+                    new Square(this.id,this.initialX,this.initialY,20,this.color, 0, false, false),
+                    new Square(this.id,this.initialX,this.initialY - 20,20,this.color, 0, false, false),
+                    new Square(this.id,this.initialX + 20,this.initialY,20,this.color, 0, false, false),
+                    new Square(this.id,this.initialX + 20,this.initialY - 20,20,this.color, 0, false, false),
                 );
                 break;
         }
@@ -236,7 +250,7 @@ export default class Form{
         });
     }
 
-    rotate(collision){
+    rotate(collision: Array<Form>){
 
         if(this.formCode == 6 || this.formCode == 2){
             return;

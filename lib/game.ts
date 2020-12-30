@@ -1,4 +1,4 @@
-import Form from "./models/form.js";
+import Form from "./models/form";
 import KeyboardListener from "./listeners/keyboard-listener.js";
 
 export interface Game{
@@ -41,20 +41,20 @@ export function createGame(screen: HTMLCanvasElement){
     const context = screen.getContext('2d');
     
     const acceptedMoves = {
-        ArrowLeft(form) {
+        ArrowLeft(form: Form) {
             form.move("left",state.forms);
         },
-        ArrowRight(form){
+        ArrowRight(form: Form){
             form.move("right",state.forms);
         },
-        ArrowUp(form){
+        ArrowUp(form: Form){
             form.rotate(state.forms)
         }
     }
 
     
 
-    function generateNumber(max){
+    function generateNumber(max: number){
         return Math.floor(Math.random() * Math.floor(max+1));
     }
 
@@ -73,8 +73,8 @@ export function createGame(screen: HTMLCanvasElement){
     }
 
     function verifyLine(){
-        let line;
-        let y;
+        let line: number;
+        let y: number;
 
         state.forms.forEach(form1 => {
             form1.squares.forEach(square1 => {
