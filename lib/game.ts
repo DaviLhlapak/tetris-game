@@ -1,5 +1,11 @@
 import Form from "./models/form";
-import KeyboardListener from "./listeners/keyboard-listener.js";
+
+import KeyboardListener from "./listeners/keyboard-listener";
+
+import { formAcceptedMoves } from './config/controllers';
+import { formsPatern } from './config/forms';
+
+import { generateNumber } from './utils/functions'
 
 export interface Game{
     startGame(): void
@@ -11,24 +17,10 @@ interface GameState{
     velocity: number,
 }
 
-interface FormPatern{
-    code: number,
-    max: number,
-    image: string
-}
-
-
 export function createGame(screen: HTMLCanvasElement){
 
-    const formsPatern: Array<FormPatern> = [
-        {code:0,max:140,image:"./images/bloco-amarelo.png"},
-        {code:1,max:160,image:"./images/bloco-azul.png"},
-        {code:2,max:180,image:"./images/bloco-laranja.png"},
-        {code:3,max:140,image:"./images/bloco-rosa.png"},
-        {code:4,max:160,image:"./images/bloco-roxo.png"},
-        {code:5,max:140,image:"./images/bloco-verde.png"},
-        {code:6,max:160,image: "./images/bloco-vermelho.png" },
-    ];
+    const keyboard = KeyboardListener(document);
+    const context = screen.getContext('2d');
 
     const state: GameState = {
         isPlaying: false,
@@ -36,26 +28,15 @@ export function createGame(screen: HTMLCanvasElement){
         velocity: 300,
     };
     
-    const keyboard = KeyboardListener(document);
+    function startGame(){
+        keyboard.subscribe(moveForm)
 
-    const context = screen.getContext('2d');
-    
-    const acceptedMoves = {
-        ArrowLeft(form: Form) {
-            form.move("left",state.forms);
-        },
-        ArrowRight(form: Form){
-            form.move("right",state.forms);
-        },
-        ArrowUp(form: Form){
-            form.rotate(state.forms)
-        }
-    }
+        state.isPlaying = true;
+        generateSquare();
 
-    
+        renderScreen();
 
-    function generateNumber(max: number){
-        return Math.floor(Math.random() * Math.floor(max+1));
+        setInterval(update,state.velocity)
     }
 
     function update(){
@@ -130,27 +111,16 @@ export function createGame(screen: HTMLCanvasElement){
         requestAnimationFrame(renderScreen);
     }
 
-    function moveForm(command){
+    function moveForm(command: any){
         let form = state.forms[state.forms.length - 1]; 
 
         const keyPressed = command.keyPressed;
-        const moveFunction = acceptedMoves[keyPressed];
+        const moveFunction = formAcceptedMoves[keyPressed];
        
         if(moveFunction){
-            moveFunction(form);
+            moveFunction(form, state.forms);
         }
 
-    }
-
-    function startGame(){
-        keyboard.subscribe(moveForm)
-
-        state.isPlaying = true;
-        generateSquare();
-
-        renderScreen();
-
-        setInterval(update,state.velocity)
     }
 
     return {
