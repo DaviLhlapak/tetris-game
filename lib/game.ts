@@ -32,7 +32,7 @@ export function createGame(screen: HTMLCanvasElement){
         keyboard.subscribe(moveForm)
 
         state.isPlaying = true;
-        generateSquare();
+        generateForm();
 
         renderScreen();
 
@@ -42,59 +42,49 @@ export function createGame(screen: HTMLCanvasElement){
     function update(){
         let form = state.forms[state.forms.length - 1];
         
-        let collid = form.isColliding(state.forms);
+        form.verifyEnabled(state.forms);
 
-        if(collid){
+        if (form.enabled) {
+            form.update();
+        } else {
             verifyLine();
-            
-            generateSquare();
-        }else{
-            form.update()
+            generateForm();
         }
     }
 
-    function verifyLine(){
-        let line: number;
-        let y: number;
+    function verifyLine() {
+        
+        for (let y = 0; y < screen.height; y += 20) {
+            let line: number = 0;
 
-        state.forms.forEach(form1 => {
-            form1.squares.forEach(square1 => {
-                state.forms.forEach(form2 => {
-                    form2.squares.forEach(square2 => {
-                        if(square1.y == square2.y){
-                            line++;
-                        }
-                    });
-                }); 
-
-            
-                if(line == 10){
-                    y = square1.y;
-                    
-                    state.forms.forEach(form => {
-                        form.deleteSquare(y);
-                    });
-                }
-    
-                line = 0;
+            state.forms.forEach(form => {
+                form.squares.forEach(square => {
+                    if(square.y == y){
+                        line++;
+                    }
+                });
             });
-        });
 
+            if(line == 10){
+                state.forms.forEach(form => {
+                    form.deleteSquare(y);
+                });
+            }
+        }
 
     }
 
-    function generateSquare(){
-
+    function generateForm(){
         let piece = generateNumber(formsPatern.length - 1);
 
-        let x = generateNumber(formsPatern[piece].max);
+        let x = 0;
 
-        while (x%20 !== 0) {
+        do {
             x = generateNumber(formsPatern[piece].max);
-        }
+        } while (x%20 !== 0);
 
-        let form = new Form(state.forms.length,x,-20,piece,formsPatern[piece].image);
-        form.create();
+        let form = new Form(state.forms.length,x,-20,piece,formsPatern[piece].image, screen.width);
+        form.generateSquares();
 
         state.forms.push(
             form

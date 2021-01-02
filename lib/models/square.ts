@@ -1,4 +1,5 @@
 import GameObject from "../interfaces/game-object";
+import Form from "./form";
 
 export default class Square implements GameObject{
     
@@ -45,7 +46,7 @@ export default class Square implements GameObject{
         this.isMoving = false;
     }
 
-    rotate(x: number,y: number): void {
+    rotate(x: number, y: number): void {
         if(this.rotateEnabled){
             this.x = this.x + (x);
             this.y = this.y + (y);

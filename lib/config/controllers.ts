@@ -9,5 +9,8 @@ export const formAcceptedMoves = {
     },
     ArrowUp(form: Form, forms: Array<Form>){
         form.rotate(forms)
+    },
+    ArrowDown(form: Form, forms: Array<Form>){
+        form.move("down",forms)
     }
 }

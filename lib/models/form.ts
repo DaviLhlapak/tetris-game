@@ -1,6 +1,13 @@
 import GameObject from '../interfaces/game-object';
 import Square from './square';
 
+export interface FormCollisions{
+    left: boolean;
+    right: boolean;
+    up: boolean;
+    down: boolean
+}
+
 export default class Form implements GameObject{
     
     id: number;
@@ -10,19 +17,23 @@ export default class Form implements GameObject{
     color: string;
     squares: Array<Square>;
     isMoving: boolean;
+    enabled: boolean;
+    max: number;
     cicles: {
         connected: object,
         disconnected: object,
     };
 
-    constructor (id: number, x: number, y: number, formCode: number, color: string){
+    constructor (id: number, x: number, y: number, formCode: number, color: string, max: number){
         this.id = id;
         this.initialX = x;
         this.initialY = y;
         this.formCode = formCode;
         this.color = color;
+        this.max = max;
         this.squares = [];
         this.isMoving = false;
+        this.enabled = true;
         this.cicles = {
             connected: [
                 {x:20,y:20},
@@ -39,153 +50,7 @@ export default class Form implements GameObject{
         };
     }
 
-    move(command: string, collision: Array<Form>){
-        let max = 200;
-
-        this.isMoving = true;
-        let needMove = true;
-
-        switch(command){
-
-            case "left":
-                this.squares.forEach(element => {
-                    if(element.x - element.size <= -20){
-                        needMove = false;
-                    }
-
-                    let value = false;
-
-                    collision.forEach(form => {
-                        if(form.id != this.id){
-                            let findedObj = form.squares.find((obj) => {return obj.x == element.x - element.size && obj.y == element.y});
-                            if(findedObj != undefined){
-                                value = true;
-                            }
-                        }
-                    });
-
-                    if(value){
-                        needMove = false;
-                    }
-                });
-
-                if(needMove){
-                    this.squares.forEach(element => {
-                        element.x -= element.size 
-                    });
-                }
-                break;
-
-            case "right":
-
-                this.squares.forEach(element => {
-                    if(element.x + element.size == max){
-                        needMove = false;
-                    }
-
-                    let value = false;
-
-                    collision.forEach(form => {
-                        if(form.id != this.id){
-                            let findedObj = form.squares.find((obj) => {return obj.x == element.x + element.size && obj.y == element.y});
-                            if(findedObj != undefined){
-                                value = true;
-                            }
-                        }
-                    });
-                    ;
-
-                    if(value){
-                        needMove = false;
-                    }
-                });
-
-                if(needMove){
-                    this.squares.forEach(element => {
-                        element.x += element.size 
-                    });
-                }
-                break;
-        }
-
-        this.isMoving = false;
-    }
-
-    draw(drawer: CanvasRenderingContext2D){
-        this.squares.forEach(element => {
-            element.draw(drawer);
-        });
-    }
-
-    update(){
-        if(!this.isMoving){
-            this.squares.forEach(element => {
-                element.update();
-            });
-        }
-    }
-
-    downSquares(y: number){
-        this.squares.forEach(square => {
-            if(square.y < y){
-                square.y = square.y + square.size;
-            }
-        })
-    }
-
-    deleteSquare(y: number){
-        let newSquares = [];
-
-        this.squares.forEach(square => {
-            if(square.y != y){
-                newSquares.push(square);
-            }
-        })
-
-        this.squares = newSquares;
-
-        this.downSquares(y);
-    }
-
-    isColliding(collision: Array<Form>){
-        let generate = false;
-
-        this.squares.forEach(square => {
-
-            if(square.y + square.size >= 400){
-                this.squares.forEach(element2 => {
-                    element2.stop();
-                });
-                
-                generate = true;
-            }
-
-            let value = false;
-
-            collision.forEach(form => {
-                if(form.id != this.id){
-                    let findedObj = form.squares.find((element) => {return element.x == square.x && element.y == square.y + square.size;});
-                    if(findedObj != undefined){
-                        value = true;
-                    }
-                }
-            });
-
-
-            if(value){
-
-                this.squares.forEach(element2 => {
-                    element2.stop();
-                });
-
-                generate = true;
-            }
-        });
-        
-        return generate;
-    }
-
-    create(){
+    generateSquares(){
         switch(this.formCode){
             case 0:
                 this.squares.push(
@@ -250,66 +115,193 @@ export default class Form implements GameObject{
         });
     }
 
-    rotate(collision: Array<Form>){
+    draw(drawer: CanvasRenderingContext2D){
+        this.squares.forEach(element => {
+            element.draw(drawer);
+        });
+    }
 
+    update():void {
+        if(!this.isMoving){
+            this.squares.forEach(element => {
+                element.update();
+            });
+        }
+    }
+
+    move(command: string, forms: Array<Form>){
+        this.isMoving = true;
+        let collisions = this.getCollisions(forms);
+
+        switch(command){
+            case "left":
+                if (!collisions.left) {
+                    this.squares.forEach(element => {
+                        element.x -= element.size 
+                    });
+                }
+                break;
+
+            case "right":
+                if (!collisions.right) {
+                    this.squares.forEach(element => {
+                        element.x += element.size 
+                    });
+                }
+                break;
+            
+            case "down":
+                if (!collisions.down) {
+                    this.squares.forEach(element => {
+                        element.y += element.size 
+                    });
+                }
+                break;
+        }
+
+        this.isMoving = false;
+    }
+
+    rotate(forms: Array<Form>) {
+        
         if(this.formCode == 6 || this.formCode == 2){
             return;
         }
 
-        let max = 200;
         let rotateEnabled = true;
 
-        this.squares.forEach(element => {
-            if(!element.rotateEnabled){
-                if(element.x - element.size <= -20){
-                    rotateEnabled = false;
-                    return;
-                }
-                if(element.x + element.size == max){
-                    rotateEnabled = false;
-                    return;
-                }
+        this.squares.forEach(square => {
+            let angle = square.angle;
+            let connected = square.connected;
+            let nextX = 0;
+            let nextY = 0;
+            
+            if (connected) {
+                nextX = this.cicles.connected[angle].x;
+                nextY = this.cicles.connected[angle].y;
+            } else {
+                nextX = this.cicles.disconnected[angle].x;
+                nextY = this.cicles.disconnected[angle].y;
             }
+
+            if ((square.y + nextY) + square.size >= 420) {
+                rotateEnabled = false;
+            }
+            if ((square.x + nextX) + square.size >= this.max + square.size) {
+                rotateEnabled = false;
+            }
+            if ((square.x + nextX) - square.size <= -40) {
+                rotateEnabled = false;
+            }
+
+            forms.forEach(form => {
+                form.squares.forEach(obj => {
+                    if (obj.id != square.id) {
+                        if (obj.x == (square.x + nextX) && obj.y == (square.y + nextY)) {
+                            rotateEnabled = false;
+                        }
+                        
+                    }
+                })
+            })
         });
 
-        if(rotateEnabled){
-            
-            let value = false;
-            let oldSquares = [];
-
-            this.squares.forEach(element => {
-
-                oldSquares.push(element);
-
-                let angle = element.angle;
-                let connected = element.connected;
+        if (rotateEnabled) {
+            this.squares.forEach(square => {
+                let angle = square.angle;
+                let connected = square.connected;
                 
                 if(connected){
-                    element.rotate(this.cicles.connected[angle].x,this.cicles.connected[angle].y);
+                    square.rotate(this.cicles.connected[angle].x,this.cicles.connected[angle].y);
                 }else{
-                    element.rotate(this.cicles.disconnected[angle].x,this.cicles.disconnected[angle].y);
+                    square.rotate(this.cicles.disconnected[angle].x,this.cicles.disconnected[angle].y);
                 }
-
-
             });
-
-            this.squares.forEach(element => {
-                collision.forEach(form => {
-                    if(form.id != this.id){
-                        let findedObj = form.squares.find((obj) => {return obj.x == element.x && obj.y == element.y});
-                        if(findedObj != undefined){
-                            value = true;
-                            console.log(`Colidiu com objeto`);
-                        }
-                    }
-                });
-            });
-
-            if(value){
-                this.squares = oldSquares;
-            }
-        
         }
     }
+
+    verifyEnabled(forms: Array<Form>) {
+        let collisions = this.getCollisions(forms);
+
+        if (collisions.down) {
+            this.enabled = false;
+        }
+    }
+
+    private downSquares(y: number){
+        this.squares.forEach(square => {
+            if(square.y < y){
+                square.y = square.y + square.size;
+            }
+        })
+    }
+
+    deleteSquare(y: number){
+        let newSquares = [];
+
+        this.squares.forEach(square => {
+            if(square.y != y){
+                newSquares.push(square);
+            }
+        })
+
+        this.squares = newSquares;
+
+        this.downSquares(y);
+    }
+
+    private getCollisions(forms: Array<Form>): FormCollisions {
+        
+        let collisions: FormCollisions = {
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+        }
+
+        this.squares.forEach(square => {
+            if (square.y + square.size >= 400) {
+                collisions.down = true;
+            }
+            if (square.x + square.size == this.max) {
+                collisions.right = true;
+            }
+            if (square.x - square.size <= -20) {
+                collisions.left = true;
+            }
+
+            forms.forEach(form => {
+                if(form.id != this.id){
+                    let findedObj = form.squares.find((obj) => {return obj.x == square.x - square.size && obj.y == square.y});
+                    if(findedObj != undefined){
+                        collisions.left = true;
+                    }
+                }
+            });
+
+            forms.forEach(form => {
+                if(form.id != this.id){
+                    let findedObj = form.squares.find((obj) => {return obj.x == square.x + square.size && obj.y == square.y});
+                    if(findedObj != undefined){
+                        collisions.right = true;
+                    }
+                }
+            });
+
+            forms.forEach(form => {
+                if(form.id != this.id){
+                    let findedObj = form.squares.find((element) => {return element.x == square.x && element.y == square.y + square.size;});
+                    if(findedObj != undefined){
+                        collisions.down = true;
+                    }
+                }
+            });
+        });
+
+
+        return collisions;
+    }
+
+    
 };
 
