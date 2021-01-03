@@ -115,7 +115,7 @@ export default class Form implements GameObject{
         });
     }
 
-    draw(drawer: CanvasRenderingContext2D){
+    draw(drawer: CanvasRenderingContext2D) {
         this.squares.forEach(element => {
             element.draw(drawer);
         });
@@ -302,6 +302,17 @@ export default class Form implements GameObject{
         return collisions;
     }
 
+    outOfScreen(): boolean {
+        let out = true;
+
+        this.squares.forEach(square => {
+            if (square.y > -20) {
+                out = false;
+            }
+        })
+
+        return out;
+    }
     
 };
 

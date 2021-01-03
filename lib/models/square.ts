@@ -21,6 +21,7 @@ export default class Square implements GameObject{
         this.size = size;
         this.color = color;
         this.img = new Image();
+        this.img.src = this.color;
         this.isMoving = true;
         this.rotateEnabled = rotate;
         this.angle = angle;
@@ -28,7 +29,6 @@ export default class Square implements GameObject{
     }
     
     draw(drawer: CanvasRenderingContext2D): void {
-        this.img.src = this.color;
         drawer.drawImage(this.img, this.x, this.y)
     }
 

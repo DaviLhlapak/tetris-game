@@ -7,13 +7,15 @@ import {createGame,Game} from '../lib/game'
 
 export default function Home() {
   
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mainRef = useRef<HTMLCanvasElement>(null);
+  const previewRef = useRef<HTMLCanvasElement>(null);
   
   const [playing, setPlaying] = useState<boolean>(false)
+  const [points, setPoints] = useState<number>(0);
   const [game, setGame] = useState<Game>(null)
   
   useEffect(() => {
-    setGame(createGame(canvasRef.current))
+    setGame(createGame(mainRef.current, previewRef.current, setPoints))
   }, [])
   
   function startGame(){
@@ -22,7 +24,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className={styles.wrapper}>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -30,11 +32,16 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <canvas ref={canvasRef} width="200" height="400"></canvas>
+      <canvas id="main" ref={mainRef} width="200" height="400"></canvas>
+
+      <aside className={styles.info}>
+        <canvas className={styles.preview} ref={previewRef} width="100" height="120"></canvas>
+        <p>Pontos: {points}</p>
+      </aside>
       
       <div className={styles.menu} style={{display: (playing)?'none':'flex'}}>
         <button onClick={startGame} className={styles.start_button}>Start Game</button>
       </div>
-    </>
+    </div>
   )
 }
